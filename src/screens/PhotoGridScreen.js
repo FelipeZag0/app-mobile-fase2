@@ -1,13 +1,18 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
-import PhotoGridItem from '../components/PhotoGridItem';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, FlatList, ActivityIndicator, Text, Modal } from 'react-native';
 import { fetchPhotos } from '../services/api';
+import PhotoGridItem from '../components/PhotoGridItem';
+import PhotoDetail from '../components/PhotoDetail';
 
 const PhotoGridScreen = ({ route, navigation }) => {
     const { albumId } = route.params;
 
     const [photos, setPhotos] = useState([]);
     const [loading, setLoading] = useState(true);
+
+
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedPhoto, setSelectedPhoto] = useState(null);
 
     useEffect(() => {
         const loadPhotos = async () => {
@@ -24,6 +29,16 @@ const PhotoGridScreen = ({ route, navigation }) => {
         
         loadPhotos();
     }, [albumId]);
+
+    const openModal = (photo) => {
+        setSelectedPhoto(photo);
+        setModalVisible(true);
+    }
+
+    const closeModal = () => {
+        setModalVisible(false);
+        setSelectedPhoto(null);
+    }
 
     if (loading) {
         return (
@@ -42,13 +57,23 @@ const PhotoGridScreen = ({ route, navigation }) => {
                 renderItem={({ item }) => (
                     <PhotoGridItem
                         item={item}
-                        onPress={() => {
-                            console.log("Foto clicada:", item.title);
-                        }}
+                        onPress={() => openModal(item)}
                     />
                 )}
                 ListEmptyComponent={<Text style={styles.centerText}>Nenhuma foto encontrada.</Text>}
             />
+
+            <Modal
+                visible={modalVisible}
+                animationType='slide'
+                transparent={false}
+                onRequestClose={closeModal}
+            >
+                <PhotoDetail
+                    photo={selectedPhoto}
+                    onClose={closeModal}
+                />
+            </Modal>
         </View>
     );
 };
